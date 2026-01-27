@@ -1,0 +1,120 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Lanka-ID Portal</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', sans-serif;
+            background-color: #f0f2f5;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            margin: 0;
+        }
+        .container {
+            background: white;
+            padding: 2rem;
+            border-radius: 10px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+            width: 400px;
+            text-align: center;
+        }
+        h1 { color: #2c3e50; margin-bottom: 20px; }
+        input {
+            width: 80%;
+            padding: 10px;
+            margin-bottom: 10px;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+            font-size: 16px;
+        }
+        button {
+            background-color: #27ae60;
+            color: white;
+            padding: 10px 20px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 16px;
+            width: 100%;
+        }
+        button:hover { background-color: #219150; }
+        #result {
+            margin-top: 20px;
+            padding: 15px;
+            background-color: #e8f5e9;
+            border: 1px solid #c8e6c9;
+            border-radius: 5px;
+            color: #2e7d32;
+            display: none; /* Hidden by default */
+            white-space: pre-line; /* Keeps the line breaks from Java */
+        }
+        .error {
+            background-color: #ffebee !important;
+            color: #c62828 !important;
+            border-color: #ffcdd2 !important;
+        }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <img src="https://upload.wikimedia.org/wikipedia/commons/5/5f/Emblem_of_Sri_Lanka.svg" width="60" alt="Emblem">
+    <h1>Lanka-ID Portal</h1>
+    <p>Enter your National Identity Card Number</p>
+
+    <input type="text" id="nicInput" placeholder="Ex: 199512345678 or 951234567V">
+    <select id="serviceType" style="width: 85%; padding: 10px; margin-bottom: 10px; border: 1px solid #ccc; border-radius: 5px; font-size: 16px; background: white;">
+        <option value="General Verification">Select Service...</option>
+        <option value="Request Birth Certificate">📜 Request Birth Certificate</option>
+        <option value="Renew Driving License">🚗 Renew Driving License</option>
+        <option value="Grama Niladhari Certificate">🏠 Grama Niladhari Certificate</option>
+        <option value="Police Report">👮 Police Report Application</option>
+    </select>
+    <button onclick="verifyNic()">Verify Identity</button>
+
+    <div id="result"></div>
+</div>
+
+<script>
+    async function verifyNic() {
+        const nic = document.getElementById("nicInput").value;
+        const resultBox = document.getElementById("result");
+
+        // 1. Clear previous results
+        resultBox.style.display = "none";
+        resultBox.classList.remove("error");
+
+        if (!nic) {
+            alert("Please enter an NIC number!");
+            return;
+        }
+
+        // 2. Call your Java Backend
+        try {
+            const service = document.getElementById("serviceType").value;
+
+            // We now send TWO things: NIC and the Request Type
+            const response = await fetch(`/check-nic?nic=${nic}&requestType=${service}`);
+            const text = await response.text();
+
+            // 3. Show the result
+            resultBox.style.display = "block";
+            resultBox.innerText = text;
+
+            // Make it red if invalid
+            if (text.includes("Invalid") || text.includes("Error")) {
+                resultBox.classList.add("error");
+            }
+        } catch (error) {
+            resultBox.innerText = "System Error: Could not connect to server.";
+            resultBox.style.display = "block";
+            resultBox.classList.add("error");
+        }
+    }
+</script>
+
+</body>
+</html>

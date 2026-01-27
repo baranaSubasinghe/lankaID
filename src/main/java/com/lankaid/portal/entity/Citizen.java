@@ -16,6 +16,7 @@ public class Citizen {
 
     private String nic;
     private String gender;
+    private String requestType; // Stores "Birth Certificate", "NIC Renewal", etc.
     private int birthYear;
 
     // We will save the full message too, just for history
