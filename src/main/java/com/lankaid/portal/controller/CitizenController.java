@@ -11,9 +11,17 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.ResponseEntity;
+import org.springframework.http.MediaType;
+
 
 @RestController
 public class CitizenController {
+
+    //pdf service injection
+    @Autowired
+    private com.lankaid.portal.service.PdfService pdfService;
 
     @Autowired
     private NicService nicService;
@@ -53,7 +61,12 @@ public class CitizenController {
     }
 
     @GetMapping("/citizens")
-    public java.util.List<Citizen> getAllCitizens() {
+    public java.util.List<Citizen> getAllCitizens(@RequestParam(required = false) String query) {
+        // If the user typed something in the search box...
+        if (query != null && !query.isEmpty()) {
+            return citizenRepository.findByNicContaining(query);
+        }
+        // Otherwise, show everyone
         return citizenRepository.findAll();
     }
 
@@ -77,5 +90,20 @@ public class CitizenController {
 
         // 3. Save updates
         return citizenRepository.save(citizen);
+    }
+
+    @GetMapping("/citizens/{id}/pdf")
+    public ResponseEntity<byte[]> downloadPdf(@org.springframework.web.bind.annotation.PathVariable Long id) {
+
+        Citizen citizen = citizenRepository.findById(id).orElseThrow();
+
+        // Generate PDF
+        byte[] pdfBytes = pdfService.generateCertificate(citizen);
+
+        // Send to browser as a download
+        return ResponseEntity.ok()
+                .header(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=certificate_" + citizen.getNic() + ".pdf")
+                .contentType(MediaType.APPLICATION_PDF)
+                .body(pdfBytes);
     }
 }

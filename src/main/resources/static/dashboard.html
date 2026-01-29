@@ -25,7 +25,14 @@
 
 <div class="container">
     <h1>🏛️ Citizen Database</h1>
+    <div style="text-align: center; margin-bottom: 20px;">
+        <input type="text" id="searchInput" placeholder="🔍 Search by NIC number..."
+               onkeyup="loadCitizens()"
+               style="padding: 10px; width: 300px; border: 1px solid #ccc; border-radius: 5px;">
+    </div>
     <button class="refresh-btn" onclick="loadCitizens()">Refresh List</button>
+
+
 
     <table id="citizenTable">
         <thead>
@@ -48,12 +55,22 @@
 <script>
     async function loadCitizens() {
         const tableBody = document.querySelector("#citizenTable tbody");
-        tableBody.innerHTML = "<tr><td colspan='4'>Loading data...</td></tr>";
+
+        // 1. Get the text from the search box
+        const query = document.getElementById("searchInput").value;
+
+        // 2. Build the URL (if query exists, add ?query=...)
+        let url = '/citizens';
+        if (query) {
+            url += `?query=${query}`;
+        }
 
         try {
-            // 1. Fetch data from your new Java endpoint
-            const response = await fetch('/citizens');
+            // 3. Fetch data from Java
+            const response = await fetch(url);
             const data = await response.json();
+
+            // ... (The rest of the function stays exactly the same) ...
 
             // 2. Clear table
             tableBody.innerHTML = "";
@@ -79,6 +96,10 @@
                             <button onclick="updateStatus(${citizen.id}, 'Approved')" style="background:#28a745; color:white; border:none; padding:5px; border-radius:4px;">✔</button>
                             <button onclick="updateStatus(${citizen.id}, 'Rejected')" style="background:#ffc107; color:black; border:none; padding:5px; border-radius:4px;">✖</button>
                             <button onclick="deleteCitizen(${citizen.id})" style="background:#dc3545; color:white; border:none; padding:5px; border-radius:4px;">🗑</button>
+
+                            <a href="/citizens/${citizen.id}/pdf" target="_blank" style="text-decoration:none;">
+                                <button style="background:#17a2b8; color:white; border:none; padding:5px; border-radius:4px;" title="Download Certificate">📄</button>
+                            </a>
                         </td>
                     </tr>
                 `;
