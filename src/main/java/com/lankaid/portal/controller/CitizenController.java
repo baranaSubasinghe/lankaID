@@ -1,106 +1,116 @@
 package com.lankaid.portal.controller;
 
-
 import java.util.List;
 import com.lankaid.portal.entity.Citizen;
 import com.lankaid.portal.repository.CitizenRepository;
 import com.lankaid.portal.service.NicService;
+import com.lankaid.portal.service.EmailService; // Import Email Service
+import com.lankaid.portal.service.PdfService;   // Import PDF Service
+
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.RequestParam;
-import org.springframework.web.bind.annotation.RestController;
-import org.springframework.web.bind.annotation.DeleteMapping;
-import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.*;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.ResponseEntity;
 import org.springframework.http.MediaType;
 
-
 @RestController
 public class CitizenController {
 
-    //pdf service injection
     @Autowired
-    private com.lankaid.portal.service.PdfService pdfService;
+    private PdfService pdfService;
 
     @Autowired
     private NicService nicService;
 
     @Autowired
-    private CitizenRepository citizenRepository; // Inject the Database Manager
+    private EmailService emailService; // Inject the Email Service
 
+    @Autowired
+    private CitizenRepository citizenRepository;
+
+    // --- 1. CREATE REQUEST (Home Page) ---
     @GetMapping("/check-nic")
-    public String checkIdentity(@RequestParam String nic, @RequestParam(required = false) String requestType) {
+    public String checkIdentity(@RequestParam String nic,
+                                @RequestParam(required = false) String requestType,
+                                @RequestParam String email) { // NEW PARAMETER
 
         // 1. DUPLICATE CHECK
         if (citizenRepository.existsByNic(nic)) {
             return "Error: This NIC is already registered in the system!";
         }
 
-        // 2. LOGIC
+        // 2. LOGIC CHECK
         String result = nicService.validateNic(nic);
 
-        // 3. SAVE REQUEST
+        // 3. SAVE DATA
         if (!result.startsWith("Invalid") && !result.startsWith("Error")) {
             Citizen citizen = new Citizen();
             citizen.setNic(nic);
             citizen.setVerificationStatus(result);
-
-            // Save the specific service they asked for (Default to "General Verification" if empty)
             citizen.setRequestType(requestType != null ? requestType : "General Verification");
+            citizen.setEmail(email); // SAVE THE EMAIL!
 
             if (result.contains("Female")) citizen.setGender("Female");
             else citizen.setGender("Male");
 
             citizenRepository.save(citizen);
 
-            return result + "\n\n[System]: Request for '" + citizen.getRequestType() + "' submitted successfully!";
+            return result + "\n\n[System]: Request submitted! Confirmation will be sent to: " + email;
         }
 
         return result;
     }
 
+    // --- 2. VIEW ALL / SEARCH (Dashboard) ---
     @GetMapping("/citizens")
-    public java.util.List<Citizen> getAllCitizens(@RequestParam(required = false) String query) {
-        // If the user typed something in the search box...
+    public List<Citizen> getAllCitizens(@RequestParam(required = false) String query) {
         if (query != null && !query.isEmpty()) {
             return citizenRepository.findByNicContaining(query);
         }
-        // Otherwise, show everyone
         return citizenRepository.findAll();
     }
 
-    // This link listens for DELETE commands
-    @org.springframework.web.bind.annotation.DeleteMapping("/citizens/{id}")
-    public String deleteCitizen(@org.springframework.web.bind.annotation.PathVariable Long id) {
+    // --- 3. DELETE (Dashboard) ---
+    @DeleteMapping("/citizens/{id}")
+    public String deleteCitizen(@PathVariable Long id) {
         citizenRepository.deleteById(id);
         return "Deleted successfully";
     }
 
-    // Import this: import org.springframework.web.bind.annotation.PutMapping;
+    // --- 4. UPDATE STATUS & SEND EMAIL (Dashboard) ---
+    @PutMapping("/citizens/{id}/status")
+    public Citizen updateStatus(@PathVariable Long id, @RequestParam String newStatus) {
 
-    @org.springframework.web.bind.annotation.PutMapping("/citizens/{id}/status")
-    public Citizen updateStatus(@org.springframework.web.bind.annotation.PathVariable Long id,
-                                @RequestParam String newStatus) {
-        // 1. Find the citizen
         Citizen citizen = citizenRepository.findById(id).orElseThrow();
-
-        // 2. Update the status
         citizen.setStatus(newStatus);
 
-        // 3. Save updates
-        return citizenRepository.save(citizen);
+        Citizen savedCitizen = citizenRepository.save(citizen);
+
+        // --- REAL EMAIL LOGIC ---
+        // Retrieve the email stored in the database for this specific user
+        String citizenEmail = citizen.getEmail();
+
+        if (citizenEmail != null && !citizenEmail.isEmpty()) {
+            if ("Approved".equals(newStatus)) {
+                emailService.sendApprovalEmail(citizenEmail, citizen.getNic(), citizen.getRequestType());
+            } else if ("Rejected".equals(newStatus)) {
+                emailService.sendRejectionEmail(citizenEmail, citizen.getNic());
+            }
+        } else {
+            System.out.println("⚠️ No email found for user " + citizen.getNic());
+        }
+
+        return savedCitizen;
     }
 
+    // --- 5. DOWNLOAD PDF (Dashboard) ---
     @GetMapping("/citizens/{id}/pdf")
-    public ResponseEntity<byte[]> downloadPdf(@org.springframework.web.bind.annotation.PathVariable Long id) {
+    public ResponseEntity<byte[]> downloadPdf(@PathVariable Long id) {
 
         Citizen citizen = citizenRepository.findById(id).orElseThrow();
 
-        // Generate PDF
         byte[] pdfBytes = pdfService.generateCertificate(citizen);
 
-        // Send to browser as a download
         return ResponseEntity.ok()
                 .header(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=certificate_" + citizen.getNic() + ".pdf")
                 .contentType(MediaType.APPLICATION_PDF)

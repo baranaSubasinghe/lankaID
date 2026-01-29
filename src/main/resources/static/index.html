@@ -66,6 +66,8 @@
     <p>Enter your National Identity Card Number</p>
 
     <input type="text" id="nicInput" placeholder="Ex: 199512345678 or 951234567V">
+    <input type="email" id="userEmail" placeholder="📧 Enter your Email Address"
+           style="width: 85%; padding: 10px; margin-bottom: 10px; border: 1px solid #ccc; border-radius: 5px; font-size: 16px;">
     <select id="serviceType" style="width: 85%; padding: 10px; margin-bottom: 10px; border: 1px solid #ccc; border-radius: 5px; font-size: 16px; background: white;">
         <option value="General Verification">Select Service...</option>
         <option value="Request Birth Certificate">📜 Request Birth Certificate</option>
@@ -79,41 +81,40 @@
 </div>
 
 <script>
-    async function verifyNic() {
-        const nic = document.getElementById("nicInput").value;
-        const resultBox = document.getElementById("result");
 
-        // 1. Clear previous results
-        resultBox.style.display = "none";
-        resultBox.classList.remove("error");
-
-        if (!nic) {
-            alert("Please enter an NIC number!");
-            return;
-        }
-
-        // 2. Call your Java Backend
-        try {
+        async function verifyNic() {
+            const nic = document.getElementById("nicInput").value;
             const service = document.getElementById("serviceType").value;
+            const email = document.getElementById("userEmail").value; // Capture email
 
-            // We now send TWO things: NIC and the Request Type
-            const response = await fetch(`/check-nic?nic=${nic}&requestType=${service}`);
-            const text = await response.text();
+            if(!nic || !email) {
+                alert("Please enter both NIC and Email!");
+                return;
+            }
 
-            // 3. Show the result
+            const resultBox = document.getElementById("result");
             resultBox.style.display = "block";
-            resultBox.innerText = text;
+            resultBox.innerHTML = "Processing...";
+            resultBox.className = "result-box";
 
-            // Make it red if invalid
-            if (text.includes("Invalid") || text.includes("Error")) {
+            try {
+                // Send NIC, Service Type, AND Email to backend
+                const response = await fetch(`/check-nic?nic=${nic}&requestType=${service}&email=${email}`);
+                const text = await response.text();
+
+                // ... (Rest of the function is the same) ...
+                resultBox.innerText = text;
+                if(text.startsWith("Error") || text.startsWith("Invalid")) {
+                    resultBox.classList.add("error");
+                } else {
+                    resultBox.classList.add("success");
+                }
+
+            } catch (error) {
+                resultBox.innerText = "Error connecting to server.";
                 resultBox.classList.add("error");
             }
-        } catch (error) {
-            resultBox.innerText = "System Error: Could not connect to server.";
-            resultBox.style.display = "block";
-            resultBox.classList.add("error");
         }
-    }
 </script>
 
 </body>

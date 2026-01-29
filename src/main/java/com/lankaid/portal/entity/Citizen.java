@@ -19,6 +19,7 @@ public class Citizen {
     private String requestType; // Stores "Birth Certificate", "NIC Renewal", etc.
     private String status = "Pending"; // Default to Pending when created
     private int birthYear;
+    private String email; // Stores the user's email address
 
     // We will save the full message too, just for history
     private String verificationStatus;
