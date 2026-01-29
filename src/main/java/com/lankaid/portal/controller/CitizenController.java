@@ -63,4 +63,19 @@ public class CitizenController {
         citizenRepository.deleteById(id);
         return "Deleted successfully";
     }
+
+    // Import this: import org.springframework.web.bind.annotation.PutMapping;
+
+    @org.springframework.web.bind.annotation.PutMapping("/citizens/{id}/status")
+    public Citizen updateStatus(@org.springframework.web.bind.annotation.PathVariable Long id,
+                                @RequestParam String newStatus) {
+        // 1. Find the citizen
+        Citizen citizen = citizenRepository.findById(id).orElseThrow();
+
+        // 2. Update the status
+        citizen.setStatus(newStatus);
+
+        // 3. Save updates
+        return citizenRepository.save(citizen);
+    }
 }

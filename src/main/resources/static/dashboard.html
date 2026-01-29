@@ -61,14 +61,24 @@
             // 3. Loop through data and create rows
 // Loop through data and create rows with a DELETE button
             data.forEach(citizen => {
+                // Color code the status
+                let statusColor = "orange"; // Default for Pending
+                if(citizen.status === "Approved") statusColor = "green";
+                if(citizen.status === "Rejected") statusColor = "red";
+
                 const row = `
                     <tr>
                         <td>${citizen.id}</td>
                         <td>${citizen.nic}</td>
-                        <td><span class="badge ${citizen.gender.toLowerCase()}">${citizen.gender}</span></td>
-                        <td style="font-weight:bold; color:#555;">${citizen.requestType || 'General'}</td>
-                        <td>Verified</td> <td>
-                            <button class="delete-btn" onclick="deleteCitizen(${citizen.id})">Delete</button>
+                        <td>${citizen.gender}
+                        <td style="font-weight:bold">${citizen.requestType || 'General'}</td>
+
+                        <td style="color:${statusColor}; font-weight:bold">${citizen.status || 'Pending'}</td>
+
+                        <td>
+                            <button onclick="updateStatus(${citizen.id}, 'Approved')" style="background:#28a745; color:white; border:none; padding:5px; border-radius:4px;">✔</button>
+                            <button onclick="updateStatus(${citizen.id}, 'Rejected')" style="background:#ffc107; color:black; border:none; padding:5px; border-radius:4px;">✖</button>
+                            <button onclick="deleteCitizen(${citizen.id})" style="background:#dc3545; color:white; border:none; padding:5px; border-radius:4px;">🗑</button>
                         </td>
                     </tr>
                 `;
@@ -96,6 +106,11 @@
             // Refresh the table to show it's gone
             loadCitizens();
         }
+    }
+    async function updateStatus(id, newStatus) {
+        // Call the Java Backend to update status
+        await fetch(`/citizens/${id}/status?newStatus=${newStatus}`, { method: 'PUT' });
+        loadCitizens(); // Refresh the table to see the new color
     }
 </script>
 
