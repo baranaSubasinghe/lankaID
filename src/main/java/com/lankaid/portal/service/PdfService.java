@@ -29,7 +29,7 @@ public class PdfService {
 
             // 1. ADD THE SRI LANKAN EMBLEM (From Local File)
             try {
-                // Load image from the "resources" folder
+
                 Image emblem = Image.getInstance(getClass().getResource("/logo.png"));
 
                 emblem.scaleToFit(100, 100); // Adjust size (Width, Height)
@@ -42,7 +42,7 @@ public class PdfService {
                 document.add(missingLogo);
             }
 
-            // 2. ADD OFFICIAL HEADERS
+            // add official header
             Font headerFont = FontFactory.getFont(FontFactory.HELVETICA_BOLD, 18);
             Paragraph header = new Paragraph("\nLANKA-ID DIGITAL CITIZEN PORTAL", headerFont);
             header.setAlignment(Element.ALIGN_CENTER);
@@ -55,14 +55,14 @@ public class PdfService {
 
             document.add(new Paragraph("\n")); // Space
 
-            // 3. DRAW A LINE
+            // draw a line
             LineSeparator line = new LineSeparator();
             line.setLineColor(Color.GRAY);
             document.add(line);
 
             document.add(new Paragraph("\n"));
 
-            // 4. ADD DATE AND REF NO
+            // add date and ref number
             Font smallFont = FontFactory.getFont(FontFactory.HELVETICA, 10);
             String todayDate = LocalDate.now().format(DateTimeFormatter.ofPattern("MMMM dd, yyyy"));
 
@@ -76,7 +76,7 @@ public class PdfService {
 
             document.add(new Paragraph("\n\n")); // Big Space
 
-            // 5. THE FORMAL BODY CONTENT
+            // the formal body content
             Font subjectFont = FontFactory.getFont(FontFactory.HELVETICA_BOLD, 12, Font.UNDERLINE);
             Paragraph subject = new Paragraph("SUBJECT: OFFICIAL VERIFICATION OF IDENTITY", subjectFont);
             subject.setAlignment(Element.ALIGN_CENTER);
@@ -96,7 +96,7 @@ public class PdfService {
 
             document.add(new Paragraph("\n"));
 
-            // 6. CITIZEN DETAILS BOX
+            //citizen detail box
             Font boldFont = FontFactory.getFont(FontFactory.HELVETICA_BOLD, 12);
 
             document.add(new Paragraph("     NIC Number:       " + citizen.getNic(), boldFont));
@@ -114,7 +114,7 @@ public class PdfService {
             document.add(new Paragraph("\n"));
 
             // Generate QR linking to a fake "verification" URL
-            // In a real app, this would be: https://lankaid.gov.lk/verify/199012345678
+
             String verificationLink = "Official Verification: " + citizen.getNic();
 
             Image qrCode = generateQrCode(verificationLink);

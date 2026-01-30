@@ -4,9 +4,8 @@ import java.util.List;
 import com.lankaid.portal.entity.Citizen;
 import com.lankaid.portal.repository.CitizenRepository;
 import com.lankaid.portal.service.NicService;
-import com.lankaid.portal.service.EmailService; // Import Email Service
-import com.lankaid.portal.service.PdfService;   // Import PDF Service
-
+import com.lankaid.portal.service.EmailService;
+import com.lankaid.portal.service.PdfService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.http.HttpHeaders;
@@ -23,32 +22,32 @@ public class CitizenController {
     private NicService nicService;
 
     @Autowired
-    private EmailService emailService; // Inject the Email Service
+    private EmailService emailService;
 
     @Autowired
     private CitizenRepository citizenRepository;
 
-    // --- 1. CREATE REQUEST (Home Page) ---
+    //  create request(Home Page)
     @GetMapping("/check-nic")
     public String checkIdentity(@RequestParam String nic,
                                 @RequestParam(required = false) String requestType,
-                                @RequestParam String email) { // NEW PARAMETER
+                                @RequestParam String email) {
 
-        // 1. DUPLICATE CHECK
+        // duplicate check
         if (citizenRepository.existsByNic(nic)) {
             return "Error: This NIC is already registered in the system!";
         }
 
-        // 2. LOGIC CHECK
+        // logic check
         String result = nicService.validateNic(nic);
 
-        // 3. SAVE DATA
+        // save data
         if (!result.startsWith("Invalid") && !result.startsWith("Error")) {
             Citizen citizen = new Citizen();
             citizen.setNic(nic);
             citizen.setVerificationStatus(result);
             citizen.setRequestType(requestType != null ? requestType : "General Verification");
-            citizen.setEmail(email); // SAVE THE EMAIL!
+            citizen.setEmail(email); // saving the email
 
             if (result.contains("Female")) citizen.setGender("Female");
             else citizen.setGender("Male");
@@ -61,7 +60,7 @@ public class CitizenController {
         return result;
     }
 
-    // --- 2. VIEW ALL / SEARCH (Dashboard) ---
+    // search / view all (dashboard)
     @GetMapping("/citizens")
     public List<Citizen> getAllCitizens(@RequestParam(required = false) String query) {
         if (query != null && !query.isEmpty()) {
@@ -70,14 +69,14 @@ public class CitizenController {
         return citizenRepository.findAll();
     }
 
-    // --- 3. DELETE (Dashboard) ---
+    // delete (dashboard)
     @DeleteMapping("/citizens/{id}")
     public String deleteCitizen(@PathVariable Long id) {
         citizenRepository.deleteById(id);
         return "Deleted successfully";
     }
 
-    // --- 4. UPDATE STATUS & SEND EMAIL (Dashboard) ---
+    // update status and send email(dashboard) ---
     @PutMapping("/citizens/{id}/status")
     public Citizen updateStatus(@PathVariable Long id, @RequestParam String newStatus) {
 
@@ -85,8 +84,6 @@ public class CitizenController {
         citizen.setStatus(newStatus);
 
         Citizen savedCitizen = citizenRepository.save(citizen);
-
-        // --- REAL EMAIL LOGIC ---
         // Retrieve the email stored in the database for this specific user
         String citizenEmail = citizen.getEmail();
 
@@ -103,7 +100,7 @@ public class CitizenController {
         return savedCitizen;
     }
 
-    // --- 5. DOWNLOAD PDF (Dashboard) ---
+    // download the pdf
     @GetMapping("/citizens/{id}/pdf")
     public ResponseEntity<byte[]> downloadPdf(@PathVariable Long id) {
 

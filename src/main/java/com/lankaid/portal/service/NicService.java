@@ -13,7 +13,7 @@ public class NicService {
         String gender = "";
 
         try {
-            // 1. Extract Year and Days
+            // Extract Year and Days
             if (nic.length() == 10) {
                 year = 1900 + Integer.parseInt(nic.substring(0, 2));
                 days = Integer.parseInt(nic.substring(2, 5));
@@ -29,7 +29,7 @@ public class NicService {
             return "Invalid NIC: Contains letters where numbers should be.";
         }
 
-        // 2. Determine Gender
+        //  Determine Gender
         if (days > 500) {
             gender = "Female";
             days = days - 500;
@@ -37,7 +37,7 @@ public class NicService {
             gender = "Male";
         }
 
-        // 3. Validation
+        // Validation
         if (days < 1 || days > 366) {
             return "Invalid NIC: Date numbers are wrong.";
         }

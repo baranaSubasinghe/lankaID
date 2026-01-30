@@ -114,7 +114,7 @@
                 const response = await fetch(`/check-nic?nic=${nic}&requestType=${service}&email=${email}`);
                 const text = await response.text();
 
-                // ... (Rest of the function is the same) ...
+                // Rest of the function is the same
                 resultBox.innerText = text;
                 if(text.startsWith("Error") || text.startsWith("Invalid")) {
                     resultBox.classList.add("error");

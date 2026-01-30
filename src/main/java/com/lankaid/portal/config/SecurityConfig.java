@@ -35,10 +35,10 @@ public class SecurityConfig {
 
     @Bean
     public UserDetailsService userDetailsService() {
-        // 3. CREATE THE ADMIN USER (In Memory)
+        // create a admin user
         UserDetails admin = User.withDefaultPasswordEncoder()
                 .username("admin")
-                .password("1234") // The password
+                .password("1234") // password
                 .roles("ADMIN")
                 .build();
 

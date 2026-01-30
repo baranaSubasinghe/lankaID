@@ -59,24 +59,20 @@
         // 1. Get the text from the search box
         const query = document.getElementById("searchInput").value;
 
-        // 2. Build the URL (if query exists, add ?query=...)
+        // Build the URL
         let url = '/citizens';
         if (query) {
             url += `?query=${query}`;
         }
 
         try {
-            // 3. Fetch data from Java
+            // Fetch data from Java
             const response = await fetch(url);
             const data = await response.json();
 
-            // ... (The rest of the function stays exactly the same) ...
-
-            // 2. Clear table
             tableBody.innerHTML = "";
 
-            // 3. Loop through data and create rows
-// Loop through data and create rows with a DELETE button
+            // Loop through data and create rows with a DELETE button
             data.forEach(citizen => {
                 // Color code the status
                 let statusColor = "orange"; // Default for Pending

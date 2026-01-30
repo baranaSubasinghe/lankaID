@@ -3,7 +3,7 @@ LABEL authors="baranasubasinghe"
 
 ENTRYPOINT ["top", "-b"]
 
-# 1. Use Java 21 (Matches your pom.xml)
+# 1. Use Java 21 (matching pom.xml)
 FROM eclipse-temurin:21-jdk-alpine
 
 # 2. Set the working directory
@@ -19,5 +19,5 @@ RUN chmod +x mvnw
 RUN ./mvnw clean package -DskipTests
 
 # 6. Run the jar file
-# Your pom.xml says artifactId is 'portal', so the jar is 'portal-...'
+# my pom.xml says artifactId is 'portal', so the jar is 'portal-...'
 CMD ["java", "-jar", "target/portal-0.0.1-SNAPSHOT.jar"]

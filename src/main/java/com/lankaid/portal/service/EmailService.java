@@ -9,7 +9,7 @@ import org.springframework.stereotype.Service;
 public class EmailService {
 
     @Autowired
-    private JavaMailSender mailSender; // The real email engine
+    private JavaMailSender mailSender;
 
     public void sendApprovalEmail(String toEmail, String nic, String requestType) {
         try {
